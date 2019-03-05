@@ -5,7 +5,8 @@ from collections import OrderedDict, defaultdict
 
 from conllu.compat import text
 
-DEFAULT_FIELDS = ('id', 'form', 'lemma', 'upostag', 'xpostag', 'feats', 'head', 'deprel', 'deps', 'misc')
+DEFAULT_FIELDS = ('id', 'text', 'lemma', 'upos', 'xpos', 'features', 'head', 'deprel', 'deps', 'misc')
+
 
 def parse_token_and_metadata(data, fields=None):
     if not data:
@@ -30,6 +31,7 @@ def parse_token_and_metadata(data, fields=None):
             tokens.append(parse_line(line, fields=fields))
 
     return tokens, metadata
+
 
 def parse_line(line, fields):
     line = re.split(r"\t| {2,}", line)
@@ -69,6 +71,7 @@ def parse_line(line, fields):
 
     return data
 
+
 def parse_comment_line(line):
     line = line.strip()
 
@@ -88,6 +91,7 @@ def parse_comment_line(line):
 
 INTEGER = re.compile(r"^0|(\-?[1-9][0-9]*)$")
 
+
 def parse_int_value(value):
     if value == '_':
         return None
@@ -101,6 +105,7 @@ def parse_int_value(value):
 ID_SINGLE = re.compile(r"^[1-9][0-9]*$")
 ID_RANGE = re.compile(r"^[1-9][0-9]*\-[1-9][0-9]*$")
 ID_DOT_ID = re.compile(r"^[0-9][0-9]*\.[1-9][0-9]*$")
+
 
 def parse_id_value(value):
     if not value or value == '_':
@@ -124,6 +129,7 @@ def parse_id_value(value):
 deps_pattern = r"\d+:[a-z][a-z_-]*(:[a-z][a-z_-]*)?"
 MULTI_DEPS_PATTERN = re.compile(r"^{}(\|{})*$".format(deps_pattern, deps_pattern))
 
+
 def parse_paired_list_value(value):
     if re.match(MULTI_DEPS_PATTERN, value):
         return [
@@ -132,6 +138,7 @@ def parse_paired_list_value(value):
         ]
 
     return parse_nullable_value(value)
+
 
 def parse_dict_value(value):
     if "=" in value:
@@ -142,11 +149,13 @@ def parse_dict_value(value):
 
     return parse_nullable_value(value)
 
+
 def parse_nullable_value(value):
     if not value or value == "_":
         return None
 
     return value
+
 
 def head_to_token(sentence):
     if not sentence:
@@ -167,6 +176,7 @@ def head_to_token(sentence):
         head_indexed[head].append(token)
 
     return head_indexed
+
 
 def serialize_field(field):
     if field is None:
@@ -192,12 +202,16 @@ def serialize_field(field):
 
     return "{}".format(field)
 
+
 def serialize(tokenlist):
     lines = []
 
     if tokenlist.metadata:
         for key, value in tokenlist.metadata.items():
-            line = "# " + key + " = " + value
+            if value:
+                line = "# " + key + " = " + value
+            else:
+                line = "# " + key
             lines.append(line)
 
     for token_data in tokenlist:
@@ -205,6 +219,7 @@ def serialize(tokenlist):
         lines.append(line)
 
     return '\n'.join(lines) + "\n\n"
+
 
 class ParseException(Exception):
     pass
